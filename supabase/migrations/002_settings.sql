@@ -3,7 +3,7 @@ create table public.settings (
   id int primary key default 1 check (id = 1),
   org_name text not null default 'Your Organisation', logo_url text,
   primary_color text not null default '#2563eb', secondary_color text not null default '#eff6ff',
-  form_title text not null default 'Anonymous Suggestion Box',
+  form_title text not null default 'SWUWS Anonymous Suggestion Box',
   intro_text text not null default 'Your voice matters. Share your concerns, ideas and recommendations confidentially.',
   privacy_notice text not null default 'We do not store your name, email, IP address or device details with your submission. Our hosting providers may process technical data, so no system can promise absolute untraceability.',
   categories jsonb not null default '["General suggestion","Work environment","Staff welfare","Management","Service delivery","Customer complaint","Ethics or misconduct","Health and safety","Other"]',

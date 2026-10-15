@@ -1,4 +1,4 @@
-# Anonymous Suggestion Box
+# SWUWS Anonymous Suggestion Box
 
 React + TypeScript + Vite + Tailwind frontend, Supabase (Postgres, Auth, Edge Function, RLS), Cloudflare Pages hosting.
 

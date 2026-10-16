@@ -25,14 +25,32 @@ export function Settings() {
   useEffect(() => { supabase.from('settings').select('*').eq('id', 1).single().then(({ data }) => { if (data) setV({ ...data, categories: (data.categories as string[]).join('\n') }) }) }, [])
   if (!v) return <p>Loading…</p>
   const set = (k: string) => (e: { target: { value: string } }) => setV({ ...v, [k]: e.target.value })
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) { setMsg('Logo file too large (max 2MB).'); return }
+    const reader = new FileReader()
+    reader.onload = (evt) => { setV({ ...v, logo_url: evt.target?.result as string }); setMsg('Logo loaded. Click Save changes.') }
+    reader.readAsDataURL(file)
+  }
   async function save() {
     const { id, ...rest } = v!; const num = (x: any) => x === '' || x == null ? null : +x
     const { error } = await supabase.from('settings').update({ ...rest, categories: String(v!.categories).split('\n').map(x => x.trim()).filter(Boolean), max_message_length: +v!.max_message_length, retention_months: num(v!.retention_months), logo_url: v!.logo_url || null, default_status: v!.default_status || null, default_category: v!.default_category || null }).eq('id', 1)
     setMsg(error ? 'Save failed. Check values (message length 100-5000).' : 'Saved.')
   }
   async function purge() { if (!confirm('Permanently delete resolved submissions older than the retention period?')) return; const { data, error } = await supabase.rpc('run_retention'); setMsg(error ? 'Retention run failed.' : `Deleted ${data} submissions.`) }
-  const F: [string, string, string?][] = [['org_name', 'Organisation name'], ['logo_url', 'Logo image URL (leave blank for placeholder)'], ['primary_color', 'Primary colour', 'color'], ['secondary_color', 'Secondary colour', 'color'], ['form_title', 'Public form title'], ['intro_text', 'Introductory text', 'area'], ['privacy_notice', 'Privacy notice', 'area'], ['categories', 'Categories (one per line)', 'area'], ['max_message_length', 'Maximum message length (100-5000)', 'number'], ['retention_months', 'Retention in months for resolved items (blank = keep)', 'number'], ['default_status', 'Default dashboard status filter (New, Under Review, Resolved or blank)'], ['default_category', 'Default dashboard category filter (blank for all)']]
+  const F: [string, string, string?][] = [['org_name', 'Organisation name'], ['logo_url', 'Logo image URL or upload file'], ['primary_color', 'Primary colour', 'color'], ['secondary_color', 'Secondary colour', 'color'], ['form_title', 'Public form title'], ['intro_text', 'Introductory text', 'area'], ['privacy_notice', 'Privacy notice', 'area'], ['categories', 'Categories (one per line)', 'area'], ['max_message_length', 'Maximum message length (100-5000)', 'number'], ['retention_months', 'Retention in months for resolved items (blank = keep)', 'number'], ['default_status', 'Default dashboard status filter (New, Under Review, Resolved or blank)'], ['default_category', 'Default dashboard category filter (blank for all)']]
   return <div className="space-y-3 max-w-xl"><h1 className="text-xl font-semibold">Settings</h1>
-    {F.map(([k, l, t]) => <label key={k} className="block text-sm font-medium">{l}{t === 'area' ? <textarea rows={k === 'categories' ? 8 : 3} className={box + ' block w-full mt-1'} value={v[k] ?? ''} onChange={set(k)}/> : <input type={t ?? 'text'} className={box + ' block w-full mt-1'} value={v[k] ?? ''} onChange={set(k)}/>}</label>)}
+    {F.map(([k, l, t]) => <label key={k} className="block text-sm font-medium">{l}{
+      k === 'logo_url' ? (
+        <div className="space-y-2 mt-1">
+          <input type="text" className={box + ' block w-full'} placeholder="Paste image URL or upload file below" value={v[k] ?? ''} onChange={set(k)}/>
+          <div className="flex items-center gap-3">
+            <input type="file" accept="image/*" onChange={handleLogoUpload} className="text-sm text-slate-500 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+            {v[k] && <img src={v[k]} alt="Logo preview" className="h-10 max-w-[8rem] object-contain border rounded p-1"/>}
+          </div>
+        </div>
+      ) : t === 'area' ? <textarea rows={k === 'categories' ? 8 : 3} className={box + ' block w-full mt-1'} value={v[k] ?? ''} onChange={set(k)}/> : <input type={t ?? 'text'} className={box + ' block w-full mt-1'} value={v[k] ?? ''} onChange={set(k)}/>
+    }</label>)}
     <div className="flex gap-2 items-center"><button onClick={save} className="rounded-lg bg-blue-600 text-white px-4 py-2 text-sm">Save changes</button><button onClick={purge} className={box + ' bg-white'}>Run retention now</button><span role="status" className="text-sm">{msg}</span></div></div>
 }

@@ -19,7 +19,7 @@ export default function Submit() {
     setBusy(false)
   }
   return (<div className="min-h-screen flex flex-col"><main className="flex-1 mx-auto w-full max-w-2xl p-4 sm:p-8">
-    <div className="flex items-center gap-3 mb-6">{st?.logo_url ? <img src={st.logo_url} alt={org + ' logo'} className="h-12 max-w-[10rem] object-contain" referrerPolicy="no-referrer"/> : <div className="h-12 w-12 rounded-lg grid place-items-center font-bold text-white" style={{ background: brand }} aria-label="Logo placeholder">{org[0] ?? ''}</div>}<span className="font-semibold">{org}</span></div>
+    <div className="flex items-center gap-3 mb-6">{st?.logo_url ? <img src={st.logo_url} alt={org + ' logo'} className="h-12 max-w-[10rem] object-contain" referrerPolicy="no-referrer"/> : <div className="h-12 w-12 rounded-lg grid place-items-center font-bold text-white shrink-0 text-xs px-1 text-center" style={{ background: brand }} aria-label="Logo placeholder">{org.split(' ').map(w => w[0]).join('').slice(0, 5) || 'SWUWS'}</div>}<span className="font-semibold">{org}</span></div>
     {done ? <div className="bg-white border border-slate-200 rounded-2xl p-8 text-center"><CheckCircle2 className="mx-auto" style={{ color: brand }} size={48}/><h1 className="text-2xl font-semibold mt-4">Thank you</h1><p className="mt-2 text-slate-600">Your feedback has been received.</p></div> :
     <form onSubmit={send} className="bg-white border border-slate-200 rounded-2xl p-6 sm:p-8 space-y-5 border-t-4" style={{ borderTopColor: brand }}>
       <div><h1 className="text-2xl font-semibold">{st?.form_title ?? 'SWUWS Anonymous Suggestion Box'}</h1><p className="text-slate-600 mt-1">{st?.intro_text ?? 'Your voice matters. Share your concerns, ideas and recommendations confidentially.'}</p></div>

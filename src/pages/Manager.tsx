@@ -43,12 +43,12 @@ function Login() {
     e.preventDefault(); setErr(''); setMsg(''); setBusy(true)
     if (mode === 'login') {
       const { error } = await supabase.auth.signInWithPassword({ email, password: pw })
-      if (error) setErr('Sign-in failed. Please check your email and password.')
+      if (error) setErr(error.message || 'Sign-in failed. Please check your email and password.')
     } else {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.origin + '/manager'
       })
-      if (error) setErr('Could not send reset email. Please try again.')
+      if (error) setErr(error.message || 'Could not send reset email. Please try again.')
       else setMsg('A password reset link has been sent to your email.')
     }
     setBusy(false)
@@ -104,10 +104,12 @@ function ResetPassword({ onSuccess }: { onSuccess: () => void }) {
     e.preventDefault(); setErr(''); setMsg(''); setBusy(true)
     if (pw.length < 6) { setErr('Password must be at least 6 characters.'); setBusy(false); return }
     const { error } = await supabase.auth.updateUser({ password: pw })
-    if (error) setErr('Could not update password. Please try again.')
+    if (error) setErr(error.message || 'Could not update password. Please try again.')
     else {
-      setMsg('Password updated successfully!')
-      setTimeout(() => onSuccess(), 1500)
+      setMsg('Password updated successfully! Redirecting…')
+      setTimeout(() => {
+        onSuccess()
+      }, 1500)
     }
     setBusy(false)
   }

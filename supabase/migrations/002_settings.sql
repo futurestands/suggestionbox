@@ -5,7 +5,7 @@ create table public.settings (
   primary_color text not null default '#2563eb', secondary_color text not null default '#eff6ff',
   form_title text not null default 'SWUWS Anonymous Suggestion Box',
   intro_text text not null default 'Your voice matters. Share your concerns, ideas and recommendations confidentially.',
-  privacy_notice text not null default 'We do not store your name, email, IP address or device details with your submission. Our hosting providers may process technical data, so no system can promise absolute untraceability.',
+  privacy_notice text not null default 'We do not store your name, email, IP address or device details with your submission.',
   categories jsonb not null default '["General suggestion","Work environment","Staff welfare","Management","Service delivery","Customer complaint","Ethics or misconduct","Health and safety","Other"]',
   max_message_length int not null default 5000 check (max_message_length between 100 and 5000),
   retention_months int check (retention_months >= 1),

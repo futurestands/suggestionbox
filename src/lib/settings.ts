@@ -9,7 +9,7 @@ const DEFAULT_SETTINGS: PS = {
   secondary_color: '#eff6ff',
   form_title: 'SWUWS Anonymous Suggestion Box',
   intro_text: 'Your voice matters. Share your concerns, ideas and recommendations confidentially.',
-  privacy_notice: 'We do not store your name, email, IP address or device details with your submission. Our hosting providers may process technical data, so no system can promise absolute untraceability.',
+  privacy_notice: 'We do not store your name, email, IP address or device details with your submission.',
   categories: ['General suggestion','Work environment','Staff welfare','Management','Service delivery','Customer complaint','Ethics or misconduct','Health and safety','Other'],
   max_message_length: 5000,
   default_status: null,

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { Session } from '@supabase/supabase-js'
-import { Download, LogOut } from 'lucide-react'
+import { Download, Eye, EyeOff, LogOut } from 'lucide-react'
 import { CATEGORIES, STATUSES, supabase } from '../lib/supabase'
 import { useSettings } from '../lib/settings'
 import { Reports, Settings } from './Extras'
@@ -19,12 +19,17 @@ export default function Manager() {
   return <Dash canEdit={role !== 'reviewer'} isAdmin={role === 'admin'} />
 }
 function Login() {
-  const [email, setE] = useState(''); const [pw, setP] = useState(''); const [err, setErr] = useState('')
+  const [email, setE] = useState(''); const [pw, setP] = useState(''); const [showPw, setShowPw] = useState(false); const [err, setErr] = useState('')
   async function go(e: React.FormEvent) { e.preventDefault(); const { error } = await supabase.auth.signInWithPassword({ email, password: pw }); if (error) setErr('Sign-in failed.') }
   return (<div className="min-h-screen grid place-items-center p-4"><form onSubmit={go} className="bg-white border border-slate-200 rounded-2xl p-8 w-full max-w-sm space-y-4"><h1 className="text-xl font-semibold">Manager sign-in</h1>
     <input aria-label="Email" type="email" className={box + ' w-full'} placeholder="Email" value={email} onChange={e => setE(e.target.value)}/>
-    <input aria-label="Password" type="password" className={box + ' w-full'} placeholder="Password" value={pw} onChange={e => setP(e.target.value)}/>
-    {err && <p role="alert" className="text-sm text-red-700">{err}</p>}<button className="w-full rounded-lg bg-blue-600 text-white py-2">Sign in</button></form></div>)
+    <div className="relative">
+      <input aria-label="Password" type={showPw ? 'text' : 'password'} className={box + ' w-full pr-10'} placeholder="Password" value={pw} onChange={e => setP(e.target.value)}/>
+      <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none" aria-label={showPw ? 'Hide password' : 'Show password'}>
+        {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </div>
+    {err && <p role="alert" className="text-sm text-red-700">{err}</p>}<button className="w-full rounded-lg bg-blue-600 text-white py-2 font-medium">Sign in</button></form></div>)
 }
 function Dash({ canEdit, isAdmin }: { canEdit: boolean; isAdmin: boolean }) {
   const ps = useSettings(); const cats = ps?.categories ?? CATEGORIES

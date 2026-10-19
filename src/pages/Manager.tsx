@@ -10,26 +10,127 @@ const box = 'rounded-lg border border-slate-300 px-3 py-1.5 text-sm'
 export default function Manager() {
   const [session, setSession] = useState<Session | null | undefined>(undefined)
   const [role, setRole] = useState<string | null>(null)
-  useEffect(() => { supabase.auth.getSession().then(({ data }) => setSession(data.session)); const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s)); return () => data.subscription.unsubscribe() }, [])
-  useEffect(() => { if (!session) return setRole(null); supabase.from('manager_roles').select('role').eq('user_id', session.user.id).eq('active', true).maybeSingle().then(({ data }) => setRole(data?.role ?? 'none')) }, [session])
+  const [recovery, setRecovery] = useState(false)
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSession(data.session))
+    const { data } = supabase.auth.onAuthStateChange((event, s) => {
+      setSession(s)
+      if (event === 'PASSWORD_RECOVERY') setRecovery(true)
+    })
+    return () => data.subscription.unsubscribe()
+  }, [])
+
+  useEffect(() => {
+    if (!session) return setRole(null)
+    supabase.from('manager_roles').select('role').eq('user_id', session.user.id).eq('active', true).maybeSingle().then(({ data }) => setRole(data?.role ?? 'none'))
+  }, [session])
+
   if (session === undefined) return <p className="p-8">Loading…</p>
+  if (recovery) return <ResetPassword onSuccess={() => setRecovery(false)} />
   if (!session) return <Login />
   if (role === null) return <p className="p-8">Loading…</p>
   if (role === 'none') return <div className="p-8">Your account is not authorised. <button className="underline" onClick={() => supabase.auth.signOut()}>Sign out</button></div>
   return <Dash canEdit={role !== 'reviewer'} isAdmin={role === 'admin'} />
 }
+
 function Login() {
-  const [email, setE] = useState(''); const [pw, setP] = useState(''); const [showPw, setShowPw] = useState(false); const [err, setErr] = useState('')
-  async function go(e: React.FormEvent) { e.preventDefault(); const { error } = await supabase.auth.signInWithPassword({ email, password: pw }); if (error) setErr('Sign-in failed.') }
-  return (<div className="min-h-screen grid place-items-center p-4"><form onSubmit={go} className="bg-white border border-slate-200 rounded-2xl p-8 w-full max-w-sm space-y-4"><h1 className="text-xl font-semibold">Manager sign-in</h1>
-    <input aria-label="Email" type="email" className={box + ' w-full'} placeholder="Email" value={email} onChange={e => setE(e.target.value)}/>
-    <div className="relative">
-      <input aria-label="Password" type={showPw ? 'text' : 'password'} className={box + ' w-full pr-10'} placeholder="Password" value={pw} onChange={e => setP(e.target.value)}/>
-      <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none" aria-label={showPw ? 'Hide password' : 'Show password'}>
-        {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
-      </button>
+  const [mode, setMode] = useState<'login' | 'forgot'>('login')
+  const [email, setE] = useState(''); const [pw, setP] = useState(''); const [showPw, setShowPw] = useState(false)
+  const [msg, setMsg] = useState(''); const [err, setErr] = useState(''); const [busy, setBusy] = useState(false)
+
+  async function go(e: React.FormEvent) {
+    e.preventDefault(); setErr(''); setMsg(''); setBusy(true)
+    if (mode === 'login') {
+      const { error } = await supabase.auth.signInWithPassword({ email, password: pw })
+      if (error) setErr('Sign-in failed. Please check your email and password.')
+    } else {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/manager'
+      })
+      if (error) setErr('Could not send reset email. Please try again.')
+      else setMsg('A password reset link has been sent to your email.')
+    }
+    setBusy(false)
+  }
+
+  return (
+    <div className="min-h-screen grid place-items-center p-4">
+      <form onSubmit={go} className="bg-white border border-slate-200 rounded-2xl p-8 w-full max-w-sm space-y-4">
+        <h1 className="text-xl font-semibold">{mode === 'login' ? 'Manager sign-in' : 'Reset password'}</h1>
+
+        <div>
+          <label className="block text-xs text-slate-500 mb-1">Email address</label>
+          <input required type="email" className={box + ' w-full'} placeholder="Email" value={email} onChange={e => setE(e.target.value)}/>
+        </div>
+
+        {mode === 'login' && (
+          <div>
+            <div className="flex justify-between items-center mb-1">
+              <label className="text-xs text-slate-500">Password</label>
+              <button type="button" onClick={() => { setMode('forgot'); setErr(''); setMsg('') }} className="text-xs text-blue-600 hover:underline">Forgot password?</button>
+            </div>
+            <div className="relative">
+              <input required type={showPw ? 'text' : 'password'} className={box + ' w-full pr-10'} placeholder="Password" value={pw} onChange={e => setP(e.target.value)}/>
+              <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none" aria-label={showPw ? 'Hide password' : 'Show password'}>
+                {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {err && <p role="alert" className="text-sm text-red-700">{err}</p>}
+        {msg && <p role="status" className="text-sm text-green-700">{msg}</p>}
+
+        <button disabled={busy} className="w-full rounded-lg bg-blue-600 text-white py-2 font-medium disabled:opacity-60">
+          {busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Send reset link'}
+        </button>
+
+        {mode === 'forgot' && (
+          <button type="button" onClick={() => { setMode('login'); setErr(''); setMsg('') }} className="w-full text-center text-sm text-slate-600 hover:underline">
+            Back to sign in
+          </button>
+        )}
+      </form>
     </div>
-    {err && <p role="alert" className="text-sm text-red-700">{err}</p>}<button className="w-full rounded-lg bg-blue-600 text-white py-2 font-medium">Sign in</button></form></div>)
+  )
+}
+
+function ResetPassword({ onSuccess }: { onSuccess: () => void }) {
+  const [pw, setP] = useState(''); const [showPw, setShowPw] = useState(false)
+  const [err, setErr] = useState(''); const [msg, setMsg] = useState(''); const [busy, setBusy] = useState(false)
+
+  async function go(e: React.FormEvent) {
+    e.preventDefault(); setErr(''); setMsg(''); setBusy(true)
+    if (pw.length < 6) { setErr('Password must be at least 6 characters.'); setBusy(false); return }
+    const { error } = await supabase.auth.updateUser({ password: pw })
+    if (error) setErr('Could not update password. Please try again.')
+    else {
+      setMsg('Password updated successfully!')
+      setTimeout(() => onSuccess(), 1500)
+    }
+    setBusy(false)
+  }
+
+  return (
+    <div className="min-h-screen grid place-items-center p-4">
+      <form onSubmit={go} className="bg-white border border-slate-200 rounded-2xl p-8 w-full max-w-sm space-y-4">
+        <h1 className="text-xl font-semibold">Set new password</h1>
+        <p className="text-xs text-slate-500">Enter a new password for your manager account.</p>
+        <div className="relative">
+          <input required type={showPw ? 'text' : 'password'} className={box + ' w-full pr-10'} placeholder="New password" value={pw} onChange={e => setP(e.target.value)}/>
+          <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+            {showPw ? <EyeOff size={18} /> : <Eye size={18} />}
+          </button>
+        </div>
+        {err && <p role="alert" className="text-sm text-red-700">{err}</p>}
+        {msg && <p role="status" className="text-sm text-green-700">{msg}</p>}
+        <button disabled={busy} className="w-full rounded-lg bg-blue-600 text-white py-2 font-medium disabled:opacity-60">
+          {busy ? 'Saving…' : 'Update password'}
+        </button>
+      </form>
+    </div>
+  )
 }
 function Dash({ canEdit, isAdmin }: { canEdit: boolean; isAdmin: boolean }) {
   const ps = useSettings(); const cats = ps?.categories ?? CATEGORIES

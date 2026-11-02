@@ -31,12 +31,22 @@ export function Reports() {
       `</body></html>`
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' })); a.download = 'report-summary.xls'; a.click()
   }
-  function exportJson() {
-    const summary = { from: from || 'all', to: to || 'all', total_submissions: rows.length, daily, weekly, monthly, by_category: group(r => r.category), by_status: group(r => r.status) }
-    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(summary, null, 2)], { type: 'application/json' })); a.download = 'report-summary.json'; a.click()
+  function exportWord() {
+    const sections: [string, [string, number][]][] = [['daily', daily], ['weekly', weekly], ['monthly', monthly], ['category', group(r => r.category)], ['status', group(r => r.status)]]
+    const escHtml = (str: string) => String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    const periodStr = (from || to) ? `Period: ${from || 'Beginning'} to ${to || 'Present'}` : 'Period: All Time'
+    const genDate = `Generated: ${new Date().toLocaleString()}`
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reports Summary</title><style>body{font-family:Arial,sans-serif;padding:20px}table{border-collapse:collapse;margin-bottom:25px;width:100%}th,td{border:1px solid #999;padding:10px;text-align:left}th{background:#2563eb;color:#fff}.header{margin-bottom:20px}</style></head><body>` +
+      `<div class="header">` +
+      (ps.logo_url ? `<img src="${escHtml(ps.logo_url)}" style="max-height:60px;max-width:180px;margin-bottom:15px"/><br/>` : ``) +
+      `<h2>${escHtml(ps.org_name || 'Suggestion Box')} - Reports Summary</h2>` +
+      `<p><strong>${periodStr}</strong><br/>${genDate}</p></div>` +
+      sections.map(([secName, data]) => `<h3>${secName.toUpperCase()}</h3><table><thead><tr><th>Label</th><th>Count</th></tr></thead><tbody>` + (data as [string, number][]).map(([k, v]) => `<tr><td>${escHtml(k)}</td><td>${v}</td></tr>`).join('') + `</tbody></table>`).join('') +
+      `</body></html>`
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], { type: 'application/msword;charset=utf-8' })); a.download = 'report-summary.doc'; a.click()
   }
   return <div className="space-y-4"><h1 className="text-xl font-semibold">Reports</h1>
-    <div className="flex flex-wrap gap-2"><input type="date" aria-label="From" className={box} value={from} onChange={e => setFrom(e.target.value)}/><input type="date" aria-label="To" className={box} value={to} onChange={e => setTo(e.target.value)}/><button onClick={exportExcel} className={box + ' bg-white text-green-700 border-green-300 hover:bg-green-50'}>Export Excel</button><button onClick={exportCsv} className={box + ' bg-white'}>Export CSV</button><button onClick={exportJson} className={box + ' bg-white'}>Export JSON</button><button onClick={() => window.print()} className={box + ' bg-white'}>Print</button></div>
+    <div className="flex flex-wrap gap-2"><input type="date" aria-label="From" className={box} value={from} onChange={e => setFrom(e.target.value)}/><input type="date" aria-label="To" className={box} value={to} onChange={e => setTo(e.target.value)}/><button onClick={exportExcel} className={box + ' bg-white text-green-700 border-green-300 hover:bg-green-50'}>Export Excel</button><button onClick={exportCsv} className={box + ' bg-white'}>Export CSV</button><button onClick={exportWord} className={box + ' bg-white text-blue-700 border-blue-300 hover:bg-blue-50'}>Export Word</button><button onClick={() => window.print()} className={box + ' bg-white'}>Print</button></div>
     <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">{[['Submissions', rows.length], ['Resolution rate', rows.length ? Math.round(done.length / rows.length * 100) + '%' : '0%'], ['Avg. days to resolve', done.length ? avg.toFixed(1) : 'n/a']].map(([l, v]) => <div key={l} className="bg-white border border-slate-200 rounded-xl p-4"><div className="text-sm text-slate-500">{l}</div><div className="text-2xl font-semibold">{v}</div></div>)}</div>
     <div className="grid lg:grid-cols-2 gap-3"><Bars title="Daily (latest 14 days)" data={daily.slice(-14)}/><Bars title="Weekly (latest 12, week starting)" data={weekly.slice(-12)}/><Bars title="Monthly (latest 12)" data={monthly.slice(-12)}/><Bars title="By category" data={group(r => r.category)}/><Bars title="By status" data={STATUSES.map(s => [s, rows.filter(r => r.status === s).length] as [string, number])}/></div></div>
 }

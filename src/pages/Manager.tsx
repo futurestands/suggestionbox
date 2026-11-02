@@ -182,10 +182,21 @@ function Dash({ canEdit, isAdmin }: { canEdit: boolean; isAdmin: boolean }) {
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' })); a.download = 'suggestions.xls'; a.click()
   }
 
-  async function exportJson() {
+  async function exportWord() {
     let { data } = await query('*'); if (!data) return; if (picked.size) data = (data as unknown as S[]).filter(r => picked.has(r.id)) as never
-    const json = JSON.stringify(data, null, 2)
-    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([json], { type: 'application/json' })); a.download = 'suggestions.json'; a.click()
+    const rows = data as unknown as S[]
+    const escHtml = (str: string | null) => str == null ? '' : String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+    const periodStr = (from || to || status || cat) ? `Filters — Status: ${status || 'All'}, Category: ${cat || 'All'}, Period: ${from || 'Beginning'} to ${to || 'Present'}` : 'Period: All Time (All Suggestions)'
+    const genDate = `Generated: ${new Date().toLocaleString()}`
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Submissions Report</title><style>body{font-family:Arial,sans-serif;padding:20px}table{border-collapse:collapse;width:100%;margin-top:15px}th,td{border:1px solid #999;padding:10px;vertical-align:top;text-align:left}th{background:#2563eb;color:#fff;font-weight:bold}.header{margin-bottom:20px}</style></head><body>` +
+      `<div class="header">` +
+      (ps?.logo_url ? `<img src="${escHtml(ps.logo_url)}" style="max-height:60px;max-width:180px;margin-bottom:15px"/><br/>` : ``) +
+      `<h2>${escHtml(ps?.org_name || 'Suggestion Box')} - Submissions Report</h2>` +
+      `<p><strong>${periodStr}</strong><br/>${genDate} · Total Records: ${rows.length}</p></div>` +
+      `<table><thead><tr><th>ID</th><th>Received</th><th>Category</th><th>Subject</th><th>Message</th><th>Suggested Solution</th><th>Status</th><th>Action Taken</th><th>Resolution Summary</th></tr></thead><tbody>` +
+      rows.map(r => `<tr><td>${r.id.slice(0, 8)}</td><td>${new Date(r.created_at).toLocaleDateString()}</td><td>${escHtml(r.category)}</td><td>${escHtml(r.subject)}</td><td>${escHtml(r.message)}</td><td>${escHtml(r.suggested_solution)}</td><td>${escHtml(r.status)}</td><td>${escHtml(r.action_taken)}</td><td>${escHtml(r.resolution_summary)}</td></tr>`).join('') +
+      `</tbody></table></body></html>`
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([html], { type: 'application/msword;charset=utf-8' })); a.download = 'suggestions.doc'; a.click()
   }
   async function deleteSelected() {
     if (!picked.size) return
@@ -211,7 +222,7 @@ function Dash({ canEdit, isAdmin }: { canEdit: boolean; isAdmin: boolean }) {
         <select className={box} value={size} onChange={e => { setSize(+e.target.value); setPage(0) }}>{[10, 25, 50, 100].map(n => <option key={n} value={n}>{n} / page</option>)}</select>
         <button onClick={exportExcel} className={box + ' flex items-center gap-1 bg-white text-green-700 border-green-300 hover:bg-green-50'}><Download size={14}/>{picked.size ? `Excel (${picked.size})` : 'Excel'}</button>
         <button onClick={exportCsv} className={box + ' flex items-center gap-1 bg-white'}><Download size={14}/>{picked.size ? `CSV (${picked.size})` : 'CSV'}</button>
-        <button onClick={exportJson} className={box + ' flex items-center gap-1 bg-white'}><Download size={14}/>{picked.size ? `JSON (${picked.size})` : 'JSON'}</button>
+        <button onClick={exportWord} className={box + ' flex items-center gap-1 bg-white text-blue-700 border-blue-300 hover:bg-blue-50'}><Download size={14}/>{picked.size ? `Word (${picked.size})` : 'Word'}</button>
         {isAdmin && picked.size > 0 && <button onClick={deleteSelected} className={box + ' flex items-center gap-1 bg-red-50 text-red-700 border-red-200 hover:bg-red-100'}><Trash2 size={14}/>Delete ({picked.size})</button>}
         <button onClick={() => window.print()} className={box + ' bg-white'}>Print</button></div>
       {err && <p role="alert" className="text-red-700">{err}</p>}

@@ -38,7 +38,7 @@ export function Reports() {
     const genDate = `Generated: ${new Date().toLocaleString()}`
     const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reports Summary</title><style>@page { size: landscape; margin: 1in; }body{font-family:Arial,sans-serif;padding:20px}table{border-collapse:collapse;margin-bottom:25px;width:100%}th,td{border:1px solid #999;padding:10px;text-align:left}th{background:#2563eb;color-white;color:#fff}.header{margin-bottom:20px}</style></head><body>` +
       `<div class="header">` +
-      (ps.logo_url ? `<img src="${escHtml(ps.logo_url)}" style="max-height:45px;max-width:140px;width:auto;height:auto;display:block;margin-bottom:10px"/><br/>` : ``) +
+      (ps.logo_url ? `<img src="${escHtml(ps.logo_url)}" width="90" height="30" style="width:90px;height:auto;max-height:35px;max-width:100px;display:block;margin-bottom:10px"/><br/>` : ``) +
       `<h2>${escHtml(ps.org_name || 'Suggestion Box')} - Reports Summary</h2>` +
       `<p><strong>${periodStr}</strong><br/>${genDate}</p></div>` +
       sections.map(([secName, data]) => `<h3>${secName.toUpperCase()}</h3><table><thead><tr><th>Label</th><th>Count</th></tr></thead><tbody>` + (data as [string, number][]).map(([k, v]) => `<tr><td>${escHtml(k)}</td><td>${v}</td></tr>`).join('') + `</tbody></table>`).join('') +

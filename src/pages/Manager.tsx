@@ -188,9 +188,9 @@ function Dash({ canEdit, isAdmin }: { canEdit: boolean; isAdmin: boolean }) {
     const escHtml = (str: string | null) => str == null ? '' : String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
     const periodStr = (from || to || status || cat) ? `Filters — Status: ${status || 'All'}, Category: ${cat || 'All'}, Period: ${from || 'Beginning'} to ${to || 'Present'}` : 'Period: All Time (All Suggestions)'
     const genDate = `Generated: ${new Date().toLocaleString()}`
-    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Submissions Report</title><style>body{font-family:Arial,sans-serif;padding:20px}table{border-collapse:collapse;width:100%;margin-top:15px}th,td{border:1px solid #999;padding:10px;vertical-align:top;text-align:left}th{background:#2563eb;color:#fff;font-weight:bold}.header{margin-bottom:20px}</style></head><body>` +
+    const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Submissions Report</title><style>@page { size: landscape; margin: 1in; }body{font-family:Arial,sans-serif;padding:20px}table{border-collapse:collapse;width:100%;margin-top:15px}th,td{border:1px solid #999;padding:8px;vertical-align:top;text-align:left}th{background:#2563eb;color:#fff;font-weight:bold}.header{margin-bottom:20px}</style></head><body>` +
       `<div class="header">` +
-      (ps?.logo_url ? `<img src="${escHtml(ps.logo_url)}" style="max-height:60px;max-width:180px;margin-bottom:15px"/><br/>` : ``) +
+      (ps?.logo_url ? `<img src="${escHtml(ps.logo_url)}" style="max-height:45px;max-width:140px;width:auto;height:auto;display:block;margin-bottom:10px"/><br/>` : ``) +
       `<h2>${escHtml(ps?.org_name || 'Suggestion Box')} - Submissions Report</h2>` +
       `<p><strong>${periodStr}</strong><br/>${genDate} · Total Records: ${rows.length}</p></div>` +
       `<table><thead><tr><th>ID</th><th>Received</th><th>Category</th><th>Subject</th><th>Message</th><th>Suggested Solution</th><th>Status</th><th>Action Taken</th><th>Resolution Summary</th></tr></thead><tbody>` +

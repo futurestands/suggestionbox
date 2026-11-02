@@ -1,0 +1,10 @@
+name = "supabase-keepalive"
+main = "worker.js"
+compatibility_date = "2024-01-01"
+
+[vars]
+SUPABASE_URL = "https://ehmqlfawothhtqprdjfl.supabase.co"
+SUPABASE_ANON_KEY = "sb_publishable_lqiO9FcD5ZdE3EbScS1HcA_uuWwVdmD"
+
+[triggers]
+crons = ["0 0 */3 * *"]

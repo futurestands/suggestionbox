@@ -218,7 +218,14 @@ function Dash({ canEdit, isAdmin }: { canEdit: boolean; isAdmin: boolean }) {
       <div className="flex flex-wrap gap-2 items-center">
         <input className={box} placeholder="Search…" value={q} onChange={e => { setQ(e.target.value); setPage(0) }}/>
         <select className={box} value={cat} onChange={e => { setCat(e.target.value); setPage(0) }}><option value="">All categories</option>{cats.map(c => <option key={c}>{c}</option>)}</select>
-        <input type="date" className={box} aria-label="From" value={from} onChange={e => setFrom(e.target.value)}/><input type="date" className={box} aria-label="To" value={to} onChange={e => setTo(e.target.value)}/>
+        <input type="date" className={box} aria-label="From" value={from} onChange={e => setFrom(e.target.value)}/>
+        <input type="date" className={box} aria-label="To" value={to} onChange={e => setTo(e.target.value)}/>
+        <div className="flex gap-1 text-xs items-center bg-slate-100 p-1 rounded-lg">
+          <button type="button" onClick={() => { const d = new Date(); d.setDate(d.getDate() - 7); setFrom(d.toISOString().slice(0, 10)); setTo(new Date().toISOString().slice(0, 10)); setPage(0) }} className="px-2 py-1 hover:bg-white rounded">Last 7d</button>
+          <button type="button" onClick={() => { const d = new Date(); d.setDate(d.getDate() - 30); setFrom(d.toISOString().slice(0, 10)); setTo(new Date().toISOString().slice(0, 10)); setPage(0) }} className="px-2 py-1 hover:bg-white rounded">Last 30d</button>
+          <button type="button" onClick={() => { const now = new Date(); setFrom(new Date(now.getFullYear(), now.getMonth(), 1).toISOString().slice(0, 10)); setTo(now.toISOString().slice(0, 10)); setPage(0) }} className="px-2 py-1 hover:bg-white rounded">This Month</button>
+          <button type="button" onClick={() => { setFrom(''); setTo(''); setPage(0) }} className="px-2 py-1 hover:bg-white rounded">All</button>
+        </div>
         <select className={box} value={size} onChange={e => { setSize(+e.target.value); setPage(0) }}>{[10, 25, 50, 100].map(n => <option key={n} value={n}>{n} / page</option>)}</select>
         <button onClick={exportExcel} className={box + ' flex items-center gap-1 bg-white text-green-700 border-green-300 hover:bg-green-50'}><Download size={14}/>{picked.size ? `Excel (${picked.size})` : 'Excel'}</button>
         <button onClick={exportCsv} className={box + ' flex items-center gap-1 bg-white'}><Download size={14}/>{picked.size ? `CSV (${picked.size})` : 'CSV'}</button>
